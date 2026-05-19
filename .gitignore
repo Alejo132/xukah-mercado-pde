@@ -1,0 +1,9 @@
+bin/
+lib/
+include/
+share/
+etc/
+pyvenv.cfg
+__pycache__/
+*.pyc
+.DS_Store
