@@ -1,0 +1,32 @@
+name: Actualizar datos semanalmente
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'  # Todos los lunes a las 8am UTC
+  workflow_dispatch:      # También permite correrlo manualmente
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install requests beautifulsoup4 pandas
+
+      - name: Correr scraper
+        run: python scraper_pde.py
+
+      - name: Commit datos actualizados
+        run: |
+          git config user.email "action@github.com"
+          git config user.name "Xukah Bot"
+          git add propiedades_pde.csv
+          git diff --staged --quiet || git commit -m "Auto-update: datos InfoCasas $(date +'%Y-%m-%d')"
+          git push
