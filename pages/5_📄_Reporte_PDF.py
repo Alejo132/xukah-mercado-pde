@@ -251,7 +251,7 @@ def generar_pdf():
     pdf.set_text_color(*gris)
     pdf.cell(0, 5, f"Xukah Real Estate - {txt(titulo_rep)} - {txt(fecha)} - Documento confidencial", align="C")
 
-    return pdf.output()
+    return bytes(pdf.output())
 
 
 # ── Preview y descarga ────────────────────────────────────────────────────────
