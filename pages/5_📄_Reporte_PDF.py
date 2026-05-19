@@ -2,10 +2,16 @@ import streamlit as st
 import pandas as pd
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
-import io, os, sys, base64
+import io, os, sys, base64, unicodedata
 from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import *
+
+def txt(s):
+    """Elimina tildes y caracteres especiales para compatibilidad con fpdf."""
+    if s is None:
+        return ""
+    return unicodedata.normalize("NFKD", str(s)).encode("ascii", "ignore").decode("ascii")
 
 st.set_page_config(page_title="Reporte PDF · Xukah", page_icon="📄", layout="wide")
 st.markdown(BASE_CSS, unsafe_allow_html=True)
@@ -59,16 +65,16 @@ def generar_pdf():
 
     pdf.set_font("Helvetica", "", 9)
     pdf.set_text_color(*dorado)
-    pdf.cell(180, 6, "INVIERTE · COMERCIALIZA", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.cell(180, 6, "INVIERTE - COMERCIALIZA", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     pdf.set_y(68)
     pdf.set_text_color(*negro)
     pdf.set_font("Helvetica", "B", 18)
-    pdf.cell(180, 10, titulo_rep.upper(), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.cell(180, 10, txt(titulo_rep).upper(), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     pdf.set_font("Helvetica", "", 11)
     pdf.set_text_color(*gris)
-    pdf.cell(180, 7, "Punta del Este · Maldonado · Edificios 2016–2026", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.cell(180, 7, "Punta del Este - Maldonado - Edificios 2016-2026", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     pdf.ln(4)
     pdf.set_draw_color(*dorado)
@@ -87,9 +93,9 @@ def generar_pdf():
     pdf.set_font("Helvetica", "", 10)
     for label, val in meta_rows:
         pdf.set_text_color(*gris)
-        pdf.cell(45, 7, label + ":", new_x=XPos.RIGHT, new_y=YPos.LAST)
+        pdf.cell(45, 7, txt(label) + ":", new_x=XPos.RIGHT, new_y=YPos.LAST)
         pdf.set_text_color(*negro)
-        pdf.cell(130, 7, val, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(130, 7, txt(val), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     pdf.ln(8)
 
@@ -98,7 +104,7 @@ def generar_pdf():
         pdf.set_fill_color(*negro)
         pdf.set_text_color(255, 255, 255)
         pdf.set_font("Helvetica", "B", 9)
-        pdf.cell(180, 8, f"  {titulo.upper()}", fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(180, 8, f"  {txt(titulo).upper()}", fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.ln(3)
         pdf.set_text_color(*negro)
 
@@ -114,24 +120,24 @@ def generar_pdf():
             pdf.set_xy(x0 + 2, y0 + 2)
             pdf.set_font("Helvetica", "", 7)
             pdf.set_text_color(*gris)
-            pdf.cell(w - 4, 4, label.upper(), new_x=XPos.RIGHT, new_y=YPos.LAST)
+            pdf.cell(w - 4, 4, txt(label).upper(), new_x=XPos.RIGHT, new_y=YPos.LAST)
             pdf.set_xy(x0 + 2, y0 + 7)
             pdf.set_font("Helvetica", "B", 12)
             pdf.set_text_color(*negro)
-            pdf.cell(w - 4, 7, val, new_x=XPos.RIGHT, new_y=YPos.LAST)
+            pdf.cell(w - 4, 7, txt(val), new_x=XPos.RIGHT, new_y=YPos.LAST)
             pdf.set_xy(x0 + 2, y0 + 15)
             pdf.set_font("Helvetica", "", 7)
             pdf.set_text_color(*gris)
-            pdf.cell(w - 4, 4, sub, new_x=XPos.RIGHT, new_y=YPos.LAST)
+            pdf.cell(w - 4, 4, txt(sub), new_x=XPos.RIGHT, new_y=YPos.LAST)
             pdf.set_x(x0 + w)
         pdf.set_y(y0 + 25)
 
     seccion("Resumen del mercado")
     kpi_row([
         ("Total propiedades", f"{len(dff):,}", f"{dff['zona'].nunique()} zonas"),
-        ("Precio mediano", f"U$S {dff['precio_usd'].median():,.0f}", "50° percentil"),
+        ("Precio mediano", f"U$S {dff['precio_usd'].median():,.0f}", "50 percentil"),
         ("Precio promedio", f"U$S {dff['precio_usd'].mean():,.0f}", "media del mercado"),
-        ("Precio mediano/m²", f"U$S {dff['precio_m2'].median():,.0f}", "por metro cuadrado"),
+        ("Precio mediano/m2", f"U$S {dff['precio_m2'].median():,.0f}", "por metro cuadrado"),
     ])
     pdf.ln(2)
 
@@ -162,13 +168,13 @@ def generar_pdf():
         pdf.set_fill_color(*bg)
         pdf.set_text_color(*negro)
         vals = [
-            row["zona"],
+            txt(row["zona"]),
             str(int(row["cantidad"])),
             f"U$S {row['mediana']:,.0f}",
-            f"U$S {row['pm2']:,.0f}" if pd.notna(row["pm2"]) else "—",
+            f"U$S {row['pm2']:,.0f}" if pd.notna(row["pm2"]) else "-",
         ]
         for v, w in zip(vals, col_ws):
-            pdf.cell(w, 6, v, fill=True, new_x=XPos.RIGHT, new_y=YPos.LAST)
+            pdf.cell(w, 6, txt(v), fill=True, new_x=XPos.RIGHT, new_y=YPos.LAST)
         pdf.ln()
 
     pdf.ln(5)
@@ -178,9 +184,9 @@ def generar_pdf():
         opps = dff[dff["pct_vs_mediana"] <= -umbral_opp].sort_values("pct_vs_mediana").head(15)
         if not opps.empty:
             pdf.add_page()
-            seccion(f"Oportunidades detectadas (≥{umbral_opp}% bajo mediana de zona)")
+            seccion(f"Oportunidades detectadas (>{umbral_opp}% bajo mediana de zona)")
 
-            headers2 = ["Título", "Zona", "Precio U$S", "% vs mediana", "Link"]
+            headers2 = ["Titulo", "Zona", "Precio U$S", "% vs mediana", "Link"]
             col_ws2  = [65, 32, 28, 25, 30]
             pdf.set_fill_color(*negro)
             pdf.set_text_color(255, 255, 255)
@@ -194,16 +200,16 @@ def generar_pdf():
                 bg = bg_gris if i % 2 == 0 else (255, 255, 255)
                 pdf.set_fill_color(*bg)
                 pdf.set_text_color(*negro)
-                titulo_c = str(row["titulo"])[:42] + ("…" if len(str(row["titulo"])) > 42 else "")
+                titulo_c = txt(str(row["titulo"]))[:42] + ("..." if len(str(row["titulo"])) > 42 else "")
                 vals2 = [
                     titulo_c,
-                    str(row["zona"])[:18],
+                    txt(str(row["zona"]))[:18],
                     f"U$S {row['precio_usd']:,.0f}",
                     f"{row['pct_vs_mediana']:.1f}%",
-                    str(row.get("link",""))[:30],
+                    txt(str(row.get("link","")))[:30],
                 ]
                 for v, w in zip(vals2, col_ws2):
-                    pdf.cell(w, 6, v, fill=True, new_x=XPos.RIGHT, new_y=YPos.LAST)
+                    pdf.cell(w, 6, txt(v), fill=True, new_x=XPos.RIGHT, new_y=YPos.LAST)
                 pdf.ln()
             pdf.ln(5)
 
@@ -213,7 +219,7 @@ def generar_pdf():
             pdf.add_page()
         seccion("Listado de propiedades (top 30 por precio)")
         top30 = dff.sort_values("precio_usd", ascending=False).head(30)
-        headers3 = ["Título", "Zona", "Precio U$S", "Dorms", "m²", "U$S/m²"]
+        headers3 = ["Titulo", "Zona", "Precio U$S", "Dorms", "m2", "U$S/m2"]
         col_ws3  = [65, 32, 28, 15, 18, 22]
         pdf.set_fill_color(*negro)
         pdf.set_text_color(255, 255, 255)
@@ -226,14 +232,14 @@ def generar_pdf():
             bg = bg_gris if i % 2 == 0 else (255, 255, 255)
             pdf.set_fill_color(*bg)
             pdf.set_text_color(*negro)
-            titulo_c = str(row["titulo"])[:42] + ("…" if len(str(row["titulo"])) > 42 else "")
+            titulo_c = txt(str(row["titulo"]))[:42] + ("..." if len(str(row["titulo"])) > 42 else "")
             vals3 = [
                 titulo_c,
-                str(row["zona"])[:18],
+                txt(str(row["zona"]))[:18],
                 f"U$S {row['precio_usd']:,.0f}",
-                str(int(row["dormitorios"])) if pd.notna(row.get("dormitorios")) else "—",
-                f"{row['m2']:.0f}" if pd.notna(row.get("m2")) else "—",
-                f"U$S {row['precio_m2']:,.0f}" if pd.notna(row.get("precio_m2")) else "—",
+                str(int(row["dormitorios"])) if pd.notna(row.get("dormitorios")) else "-",
+                f"{row['m2']:.0f}" if pd.notna(row.get("m2")) else "-",
+                f"U$S {row['precio_m2']:,.0f}" if pd.notna(row.get("precio_m2")) else "-",
             ]
             for v, w in zip(vals3, col_ws3):
                 pdf.cell(w, 6, v, fill=True, new_x=XPos.RIGHT, new_y=YPos.LAST)
@@ -243,7 +249,7 @@ def generar_pdf():
     pdf.set_y(-15)
     pdf.set_font("Helvetica", "", 7)
     pdf.set_text_color(*gris)
-    pdf.cell(0, 5, f"Xukah Real Estate · {titulo_rep} · {fecha} · Documento confidencial", align="C")
+    pdf.cell(0, 5, f"Xukah Real Estate - {txt(titulo_rep)} - {txt(fecha)} - Documento confidencial", align="C")
 
     return pdf.output()
 
